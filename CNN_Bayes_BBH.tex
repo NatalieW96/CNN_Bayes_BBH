@@ -1,0 +1,173 @@
+\documentclass[12pt, letterpaper, twoside]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{subcaption}
+ 
+\title{Convolutional Neural Networks compared to the Bayes Factor for classification of Binary Black Hole Gravitational Wave mergers}
+\author{Natalie Williams}
+\date{July 2018}
+ 
+\begin{document}
+ 
+\maketitle
+
+\begin{abstract}
+In this project, a developed Convolution Neural Network (CNN) for Binary Black Holes (BBH) is used to produce saliency maps and deep layer visualisations. Then by generating sine-gaussian data for which the Bayes factor is analytically calculatable, this data is used in both the developed CNN and a simple CNN to show ROC curves comparing the Bayes factor to classification predictions from the CNN.
+\end{abstract}
+ 
+\section{Introduction}
+Previously it has been shown that using CNNs as use for classifying BBH Gravitational Wave (GW) signals achieves the same sensitivity as a matched filter approach \cite{paper}. To further investigate the limitations of deep learning approaches, it is then useful to test how how it preforms against the optimal Bayesian statistic, the Bayes factor\cite{bayes}. The code for this project can be found at \url{https://github/NatalieW96/CNN_Bayes_BBH.git}.
+\section{Saliency Maps and Deep Layer Visualisations}
+In this first section of the project, the developed CNN and data from H Gabbard et al (2018) is used to create a saliency map and a deep layer visualisation.
+
+Saliency maps are useful for visualising which parts of data are most useful for classification in the CNN. This is done by computing the gradient of output category  with respect to input data.
+\[\frac{\partial output}{\partial input}\]
+
+By changing the  data slightly by a constant amount, it can then be seen how output category changes, where positive values indicate small changes to that data point increases the output value. Therefore this can be used to highlight input regions that cause the most change in output, and in turn which regions contribute most towards the output.
+The model used for these saliency maps is described in Table \ref{CNN1}. The output saliency maps for noisy and noise free input data is shown in Fig \ref{Saliency}, where both are using the CNN trained on noisy data and implemented using keras-vis.
+Class model visualisation can also be used to view to optimal class for a network. It shows what each neuron “wants to see”, and thus what each neuron has learned to look for in a network. The class model visualisation for the trained CNN in tble \ref{CNN1} is shown in fig \ref{fig:visualisation}. It is important to note here that as the network has been trained on noisy data, the visualisation is also noisy. 
+\begin{center}
+\begin{table}[]
+\begin{tabular}{llllllllll}
+\hline
+\multirow{2}{*}{\begin{tabular}[c]{@{}l@{}}Parameter\\ (Option)\end{tabular}} & \multicolumn{9}{c}{Layer}     \\ \cline{2-10} 
+                  & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\ \cline{1-10}
+                  Type & C & C & C & C & C & C & H & H & H \\
+                  No. neurons & 8 & 8 & 16 & 16 & 32 & 32 & 64 & 64 & 2 \\
+                 Filter Size & 64 & 32 & 32 & 16 & 16 & n/a & n/a & n/a & n/a \\
+                 MaxPool Size & n/a & 8 & n/a & 6 & n/a & 4 & n/a & n/a & n/a \\
+                 Drop out & 0 & 0 & 0 & 0 & 0 & 0 & 0.5 & 0.5 & 0 \\
+                 Act. Func. & elu & elu & elu & elu & elu & elu & elu & elu & Smax\\
+\cline{1-10}
+\end{tabular}
+\caption{The original network consisting of 6 convolu-
+tional layers (C), followed by 3 hidden layers (H). Max-poolingis performed on the first, fifth, and eighth layer, whereas dropout is only performed on the two hidden layers.  Each layer uses an exponential linear unit (Elu) activation function (with range $[(-1, \infty)]$ while the last layer uses a Softmax (SMax) activation function in order to normalize the output values to be between zero and one so as to give a probability value for each class.}
+\label{CNN1}
+\end{table}
+\end{center}
+
+\begin{figure}
+\begin{subfigure}[b]{0.5\textwidth}
+\includegraphics[width=\linewidth]{inputdata.png}
+  \label{fig:input}
+  \caption{}
+\end{subfigure}
+\begin{subfigure}[b]{0.5\textwidth}
+\includegraphics[width=\linewidth]{signal_SNR10.png}
+  \label{fig:signal}
+  \caption{}
+\end{subfigure}
+\\
+\begin{subfigure}[b]{0.5\textwidth}
+\includegraphics[width=\linewidth]{saliency_SNR10.png}
+  \label{fig:saliency0}
+  \caption{}
+\end{subfigure}
+\begin{subfigure}[b]{0.5\textwidth}
+\includegraphics[width=\linewidth]{saliency_SNR10_500.png}
+  \label{fig:saliency500}
+  \caption{}
+\end{subfigure}
+\\
+\begin{subfigure}[b]{0.5\textwidth}
+\includegraphics[width=\linewidth]{saliency_signal_SNR10.png}
+  \label{fig:saliencysignal0}
+  \caption{}
+\end{subfigure}
+\begin{subfigure}[b]{0.5\textwidth}
+\includegraphics[width=\linewidth]{saliency_signal_SNR10_500.png}
+  \label{fig:saliencysignal500}
+  \caption{}
+\end{subfigure}
+
+\caption{Saliency map results. Shown is the input data with time interval against amplitude for (a) noisy GW signal and (b) noise free GW signal. Saliency maps showing time interval against saliency for noisy data (c) with no smoothing window and (d) a smoothing window of 500, and saliency maps for noise free data (e) with no smoothing window and (f) a smoothing window of 500 are shown.}
+\label{Saliency}
+\end{figure}
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=0.8\linewidth]{visualization_signal.png}
+\label{fig:visualisation}
+\caption{Class model visualisation for a noisy GW signal, showing time interval against amplitude}
+\end{center}
+\end{figure}
+
+
+\section{The Bayes Factor}
+The bayes factor is the optimal Bayesian statistic, and can be described as the ratio of the likelihood probability of two competing hypotheses. In this particular case the competing hypothesis are signal and noise (note that the noise will have no parameters). Therefore the Bayes factor can be written as
+\[K = \frac{p(\mathbf{x}|H_{signal})}{p(\mathbf{x}|H_{nosie})}=\frac{\int p(\mathbf{x}|\boldsymbol{\theta}, H_{signal})p(\boldsymbol{\theta}|H_{signal})d\boldsymbol{\theta}}{p(\mathbf{x}|H_{noise})}\]
+To make this analytically solvable, we choose a simple sine-Gaussian waveform as signal with Gaussian noise, and choose priors such that this can be integrated. The parameters are $\boldsymbol{\theta}=[A,f_{0}, t_{0}, \phi, \tau]$, where $A$ is amplitude of the waveform, $f_{0}$ is the signal frequency, $t_{0}$ is central time, $\phi$ is phase, and $\tau$ is Gaussian envelope width. The sine Gaussian signal used is in the form
+\[h(t_{j})=A\sin (2\pi f_{0}(t_{j}-t_{0})+\phi)\exp\Big \{\frac{(t_{j}-t_{0})^{2}}{\tau^{2}}\Big \}\]
+such that the likelihood is
+\[p(\mathbf{x}|\boldsymbol{\theta}, H_{signal})= \prod_{j=1}^{N}\frac{1}{\sqrt{2\pi}\sigma_{j}}\exp\Big\{-\frac{1}{2\sigma_{j}^{2}}(x_{j}-h_{j})^{2}\Big\}\]
+This is solved by redefining parameters $R=A\sin \phi$ and $S=A \cos \phi$, setting $f_{0}$ constant at 32Hz. To get the Bayes integral, this likelihood is then multiplied by the priors for $R$ and $S$
+
+\[p(\boldsymbol{\theta}|H_{signal})=\bigg\{\frac{1}{\sqrt{2\pi}\sigma_{RS}}\exp\Big\{-\frac{R^{2}}{2\sigma_{RS}^{2}}\Big\}\bigg\} \bigg\{\frac{1}{\sqrt{2\pi}\sigma_{RS}}\exp\Big\{-\frac{S^{2}}{2\sigma_{RS}^{2}}\Big\}\bigg\}\]
+ This is then integrated analytically over $R$ and $S$ between the limits of 0 and 1 each to obtain
+1
+\[K = \int\int\frac{1}{\sigma_{RS}^{2}\sqrt{ac}}\exp\Big\{\frac{1}{4}\Big(\frac{b^{2}}{a}+\frac{d^{2}}{c}\Big)\Big\}d\tau \, dt_{0}\]
+
+where
+
+\[a=\frac{1}{2\sigma_{RS}^{2}}+\sum \frac{f_{j}^{2}}{2\sigma^{2}} \quad c=\frac{1}{2\sigma_{RS}^{2}}+\sum \frac{g_{j}^{2}}{2\sigma^{2}} \]
+
+\[b= \sum \frac{f_{j}x_{j}}{\sigma^{2}} \quad d=\sum \frac{g_{j}x_{j}}{\sigma^{2}} \]
+
+Here $f_{j}$ and $g_{j}$ are generated timeseries for signals of $R=1, S=0$ and $r=0, S=1$ respectively with the chosen $\tau$ and $t_{0}$ for the sample. This result is the numerically integrated between the limits of the intervals from which $\tau$ and $t_{0}$ are randomly drawn when generating the signals, which gives the result of the Bayes factor, $K$.
+
+A set of 100,000 timeseries are then generated with their respective Bayes factors for use in this project, where each sample is randomly selected to either be signal and noise, or noise only.
+
+\begin{table}[]
+\begin{center}
+\begin{tabular}{llll}
+\hline
+\multirow{2}{*}{\begin{tabular}[c]{@{}l@{}}Parameter\\ (Options)\end{tabular}} & \multicolumn{3}{c}{Layer} \\ \cline{2-4} 
+                                                                             & 1       & 2      & 3      \\ \cline{1-4}
+                                                                          Type   &  C       &   C     &       H \\
+                                                                           No. neurons  &    8     &    64    &   2     \\
+                                                                         Filter Size    &   32      &       16 &     4   \\
+                                                                         MaxPool Size    &   6      &       n/a &    4    \\
+                                                                         Drop out    &   0      &  0.5      &   0     \\
+                                                                        Act. Func.     &   elu      &       elu &     Smax  
+\end{tabular}
+\caption{Convolutional neural network consisting of 2 convolu-
+tional layers (C), followed by 1 hidden layer (H). Max-poolingis performed on the first and third layer, whereas dropout is only performed on the second layer.  Each layer uses an exponential linear unit (Elu) activation function (with range $[(-1, \infty)]$ while the last layer uses a Softmax (SMax) activation function in order to normalize the output values to be between zero and one so as to give a probability value for each class.}
+\label{CNN2}
+\end{center}
+\end{table}
+\section{Convolutional Neural Network}
+The next step is now to use the generated signals in a CNN to obtain class probability which can then be later compared to the Bayes factor. A simplified CNN is used for this as described in table \ref{CNN2}, where 90,000 samples are used for training and 5,000 each for validation and testing.
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.8\linewidth]{bayes_machinelearning.png}
+\caption{Comparison for 5000 datapoints between Bayes factor and CNN class probability. Noise is shown in blue and signal is shown in red.}
+\label{fig:comp}
+\end{center}
+\end{figure}
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=\linewidth]{ROC.png}
+\caption{ROC curve for Bayes factor (blue) of 100,000 timesamples and CNN class probability (green) of 5,000 timesamples}
+\label{fig:roc}
+\end{center}
+\end{figure}
+\section{Results}
+The direct comparison between the Bayes factor and the class probability is shown in fig \ref{fig:comp}. As expected noise dominates the low Bayes factors and class probability, and signal dominates the high values for each; however it is also important to note the level of noise. Fig \ref{fig:roc} shows the receiver operating characteristic (ROC) curve for the Bayes factor and the CNN class probability result.
+
+\section{Conclusion}
+Presented in this report is the comparison between the optimal Bayesian statistic, the Bayes factor, and the class probability predicted by a CNN. The direct comparison in fig \ref{fig:comp} is shows noise dominating low Bayes factors and class predictions and signal dominating high values as expected. To decrease the noise in this relation it may be useful to vary the CNN. 
+
+It is shown in the final ROC curve in fig \ref{fig:roc} that the CNN result follows the same trend and lies below the the Bayes factor curve which is to be expected assuming the Bayes factor is indeed the optimal statistic. It would be useful in the future to see how these results compare to the currently used classification technique of matched filtering.
+\begin{thebibliography}{9}
+\bibitem{paper} 
+Hunter Gabbard, Michael Williams, Fergus Hayes, Chris Messenger.
+\textit{Matching matched filtering with deep networks in gravitational-wave astronomy}. 
+Phys. Rev. Lett. 120, 141103 (2018)
+\bibitem{bayes}
+Antony Searle
+\textit{Monte-Carlo and Bayesian techniques in gravitational wave burst data analysis}
+ 	arXiv:0804.1161 (2008)
+\end{thebibliography}
+\end{document}
